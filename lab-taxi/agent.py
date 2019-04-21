@@ -57,5 +57,4 @@ class Agent:
         sum_error = (target + current)
         update_error = self.alpha * sum_error
         self.Q[state][action] = current + update_error
-    
-    def update_q_expectsarsa(self, state, action, reward, next_state=None):
+        
