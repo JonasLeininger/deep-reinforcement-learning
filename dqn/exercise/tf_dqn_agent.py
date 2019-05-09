@@ -32,9 +32,10 @@ class Agent():
         self.qnetwork = TfQNetwork(self.action_size)
         self.qnetwork.compile(optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate),
                            loss='mse')
-        self.target_network = TfQNetwork(self.action_size, name="target_network")
+        self.target_network = TfQNetwork(self.action_size)
         self.target_network.compile(optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate),
                               loss='mse')
+        self.update_target_network()
         self.memory = ReplayBuffer(action_size, self.buffer_size, self.batch_size)
 
     def step(self, state, action, reward, next_state, done):
@@ -46,13 +47,12 @@ class Agent():
         for state, action, reward, next_state, done in experience:
             target = reward
             if not done:
-                target = reward + self.gamma*np.amax(self.qnetwork.predict(next_state)[0])
+                target = reward + self.gamma*np.amax(self.target_network.predict(next_state)[0])
             future_target = self.qnetwork.predict(state)
             future_target[0][action] = target
             self.qnetwork.fit(state, future_target, epochs=1, verbose=0)
 
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+        self.update_target_network()
 
     def act(self, state):
         if np.random.rand() <= self.epsilon:
