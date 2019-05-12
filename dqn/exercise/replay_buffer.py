@@ -43,7 +43,7 @@ class ReplayBuffer:
   
         return states, actions, rewards, next_states, dones
     
-    def sample_loop(self):
+    def sample_for_loop_style(self):
         """Randomly sample a batch of experiences from memory."""
         experiences = random.sample(self.memory, k=self.batch_size)
         return experiences

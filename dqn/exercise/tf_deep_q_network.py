@@ -19,16 +19,6 @@ def main():
 
     agent = Agent(state_size=env.observation_space.shape[0], action_size=env.action_space.n)
 
-    # for j in range(200):
-    #     state = np.reshape(state, [1, 8])
-    #     action = agent.act(state)
-    #     env.render()
-    #     time.sleep(0.01)
-    #     state, reward, done, _ = env.step(action)
-    #     if done:
-    #         break 
-    # env.close()
-
     episodes = 5000
     scores_window = deque(maxlen=100)
     scores = []

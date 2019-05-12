@@ -54,8 +54,8 @@ class Agent():
 
         self.update_target_network()
     
-    def replay_loop(self):
-        experience = self.memory.sample_loop()
+    def replay_with_loop_style(self):
+        experience = self.memory.sample_for_loop_style()
         batch_state = []
         batch_target = []
         for state, action, reward, next_state, done in experience:
@@ -75,11 +75,5 @@ class Agent():
         return np.argmax(act_values[0])
 
     def update_target_network(self):
-        # local_weights =  self.qnetwork.get_weights()
-        # for layer in local_weights:
-        #     layer = self.tau * layer
-        # target_weights = self.target_network.get_weights()
-        # for i, layer in enumerate(target_weights):
-        #     layer = local_weights[i] + (1.0 - self.tau) * layer
         
         self.target_network.set_weights(self.qnetwork.get_weights())
