@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import tensorflow.keras.backend as K
 import random
 from collections import namedtuple, deque
 
@@ -33,14 +34,18 @@ class ReplayBuffer:
         """Randomly sample a batch of experiences from memory."""
         experiences = random.sample(self.memory, k=self.batch_size)
 
-        # states = tf.Variable(np.vstack([e.state for e in experiences if e is not None]), dtype=tf.float32)
-        # actions = tf.Variable(np.vstack([e.action for e in experiences if e is not None]), dtype=tf.float32)
-        # rewards = tf.Variable(np.vstack([e.reward for e in experiences if e is not None]), dtype=tf.float32)
-        # next_states = tf.Variable(np.vstack([e.next_state for e in experiences if e is not None]), dtype=tf.float32)
-        # dones = tf.Variable(np.vstack([e.done for e in experiences if e is not None]).astype(np.bool), dtype=tf.bool)
+        states = np.vstack([e.state for e in experiences if e is not None])
+        actions = np.vstack([e.action for e in experiences if e is not None])
+        rewards = np.vstack([e.reward for e in experiences if e is not None])
+        next_states = np.vstack([e.next_state for e in experiences if e is not None])
+        dones = np.vstack([e.done for e in experiences if e is not None]).astype(np.float)
 
   
-        # return states, actions, rewards, next_states, dones
+        return states, actions, rewards, next_states, dones
+    
+    def sample_loop(self):
+        """Randomly sample a batch of experiences from memory."""
+        experiences = random.sample(self.memory, k=self.batch_size)
         return experiences
 
     def __len__(self):

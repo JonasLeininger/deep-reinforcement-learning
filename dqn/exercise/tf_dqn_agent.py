@@ -26,9 +26,9 @@ class Agent():
         self.action_size = action_size
         self.gamma = 0.99
         self.epsilon = 1.0
-        self.epsilon_min = 0.1
+        self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
-        self.learning_rate = 0.001  # or 5e-4
+        self.learning_rate = 0.0005  # or 5e-4
         self.qnetwork = TfQNetwork(self.action_size)
         self.qnetwork.compile(optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate),
                            loss='mse')
@@ -43,15 +43,29 @@ class Agent():
         self.memory.add(state, action, reward, next_state, done)
 
     def replay(self):
-        experience = self.memory.sample()
-        for state, action, reward, next_state, done in experience:
-            target = reward
-            if not done:
-                target = reward + self.gamma*np.amax(self.target_network.predict(next_state)[0])
-            future_target = self.qnetwork.predict(state)
-            future_target[0][action] = target
-            self.qnetwork.fit(state, future_target, epochs=1, verbose=0)
+        states, actions, rewards, next_states, dones = self.memory.sample()
+        outputs = self.target_network.predict(next_states)
+        targets = rewards + (self.gamma * np.reshape(np.amax(outputs, axis=1), [64, 1])*(1.0 - dones))
+        predicts = self.qnetwork.predict(states)
+        for i in range(predicts.shape[0]):
+            predicts[i][actions[i]] = targets[i]
+                
+        self.qnetwork.fit(states, predicts, epochs=1, verbose=0)
 
+        self.update_target_network()
+    
+    def replay_loop(self):
+        experience = self.memory.sample_loop()
+        batch_state = []
+        batch_target = []
+        for state, action, reward, next_state, done in experience:
+            target = self.qnetwork.predict(next_state)
+            target[0][action] = reward if done else reward + self.gamma * np.max(target[0])
+            predict = self.qnetwork.predict(state)
+            batch_state.append(state[0])
+            batch_target.append(target[0])
+        
+        self.qnetwork.fit(np.array(batch_state), np.array(batch_target), epochs=1, verbose=0)
         self.update_target_network()
 
     def act(self, state):
@@ -61,4 +75,11 @@ class Agent():
         return np.argmax(act_values[0])
 
     def update_target_network(self):
+        # local_weights =  self.qnetwork.get_weights()
+        # for layer in local_weights:
+        #     layer = self.tau * layer
+        # target_weights = self.target_network.get_weights()
+        # for i, layer in enumerate(target_weights):
+        #     layer = local_weights[i] + (1.0 - self.tau) * layer
+        
         self.target_network.set_weights(self.qnetwork.get_weights())
